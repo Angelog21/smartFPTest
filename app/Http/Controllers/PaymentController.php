@@ -22,10 +22,12 @@ class PaymentController extends Controller
     public function index()
     {
         try {
-            //get all payments with de name of the payment method
+            //get all payments with the name of the payment method
             $payments = Payment::with(['payment_method' => function ($query) {
+
                 $query->select('slug','name');
-            }])->paginate(5);
+
+            }])->select('id','cpf','payment_ms','amount','status','created_at')->paginate(5);
 
             return response()->json([
                 "success" => true,
@@ -140,7 +142,65 @@ class PaymentController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            if (!isset($id)) {
+                return repsonse()->json([
+                    "success" => false,
+                    "message" => "Missing id of payment"
+                ]);
+            }
+
+            //get detail payment
+            $payment = Payment::whereId($id)->select(
+                    'id',
+                    'origin_id',
+                    'receiver_id',
+                    'payment_ms',
+                    'amount',
+                    'status',
+                    'payment_date',
+                    'description',
+                    'created_at'
+                )->first();
+
+            
+            if (!$payment) {
+                return respone()->json([
+                    "success" => false,
+                    "message" => "payment not found"
+                ]);
+            }
+
+            //If the payment is found, the relationships are loaded to optimize the query
+            $payment->load([
+                'payment_method' => function ($query) {
+
+                    $query->select('slug','name');
+
+                },
+                'origin' => function ($query) {
+
+                    $query->select('id','name','email','cpf');
+
+                },
+                'receiver' => function ($query) {
+
+                    $query->select('id','name','email','cpf');
+
+                }
+            ]);
+
+            return response()->json([
+                "success" => true,
+                "data" => $payment
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message'=>"Error in get detail payment.",
+            ]);
+        }
     }
 
     /**
