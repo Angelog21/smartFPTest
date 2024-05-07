@@ -14,7 +14,7 @@ class Payment extends Model
     protected $fillable = [
         'origin_id',
         'receiver_id',
-        'payment_method_slug',
+        'payment_ms',
         'client_name',
         'cpf',
         'description',
