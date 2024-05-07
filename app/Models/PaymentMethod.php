@@ -16,5 +16,11 @@ class PaymentMethod extends Model
         'slug'
     ];
 
+    protected $keyType = 'string';
+
     public $timestamps = false;
+
+    public function payments() {
+        return $this->hasMany(Payment::class,'payment_ms','slug');
+    }
 }

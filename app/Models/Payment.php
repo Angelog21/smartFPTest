@@ -23,6 +23,12 @@ class Payment extends Model
         'payment_date'
     ];
 
+    protected $casts = [
+        'amount' => 'decimal:2',
+    ];
+
+    protected $keyType = 'string';
+
     public function origin() {
         return $this->belongsTo(User::class,'origin_id');
     }
@@ -32,6 +38,6 @@ class Payment extends Model
     }
 
     public function payment_method() {
-        return $this->belongsTo(User::class,'payment_method_slug');
+        return $this->belongsTo(PaymentMethod::class,'payment_ms','slug');
     }
 }

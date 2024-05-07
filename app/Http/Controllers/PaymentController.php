@@ -14,14 +14,30 @@ class PaymentController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth.api');
     }
     /**
      * Display a listing of the payments.
      */
     public function index()
     {
-        
+        try {
+            //get all payments with de name of the payment method
+            $payments = Payment::with(['payment_method' => function ($query) {
+                $query->select('slug','name');
+            }])->paginate(5);
+
+            return response()->json([
+                "success" => true,
+                "data" => $payments
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message'=>"Error in get payments.",
+            ]);
+        }
     }
 
     /**
