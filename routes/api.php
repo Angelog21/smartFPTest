@@ -10,7 +10,7 @@ use App\Http\Controllers\TodoController;
 Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('register', 'register');
-    Route::post('logout', 'logout');
+    Route::get('logout', 'logout');
 
 });
 
