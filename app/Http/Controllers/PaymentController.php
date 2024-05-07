@@ -34,7 +34,7 @@ class PaymentController extends Controller
             try {
                 $request->validate([
                     'cpf' => 'required|max:15',
-                    'amount' => 'required',
+                    'amount' => 'required|numeric',
                     'payment_method' => 'required',
                 ]);
             } catch (\Exception $e) {
