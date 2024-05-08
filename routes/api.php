@@ -18,4 +18,5 @@ Route::controller(PaymentController::class)->prefix('payments')->group(function 
     Route::post('/','store');
     Route::get('/','index');
     Route::get('/{id}','show');
+    Route::post('/process','processPayment');
 }); 

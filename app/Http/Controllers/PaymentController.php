@@ -43,7 +43,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created payment.
      */
     public function store(Request $request)
     {
@@ -138,7 +138,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified payment.
      */
     public function show(string $id)
     {
@@ -206,8 +206,82 @@ class PaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function processPayment(Request $request)
     {
-        //
+        try {
+            try {
+                $request->validate([
+                    'paymentId' => 'required|string'
+                ]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    "success"=>false,
+                    "message" => $e->getMessage(),
+                ]);
+            }
+
+            $payment = Payment::whereId($request->paymentId)->first();
+            
+            //validate if payment exists
+            if (!$payment) {
+                return respone()->json([
+                    "success" => false,
+                    "message" => "payment not found"
+                ]);
+            }
+
+            //Validate if payment isn't pending
+            if ($payment->status != 'pendiente') {
+
+                return response()->json([
+                    "success"=>false,
+                    "message" => "Payment status is {$payment->status}",
+                ]);
+
+            }
+
+            $isProcessing = rand(1,100);
+
+            //If the number is between 1 and 70, it is processed successfully
+            if($isProcessing <= 70) {
+
+                //The recipient's balance is added
+                $receiverUser = $payment->load('receiver');
+                $receiverUser->receiver->currency += $payment->amount;
+                $receiverUser->receiver->save();
+
+                $payment->status = 'pagado';
+                $payment->save();
+
+                return response()->json([
+                    "success" => true,
+                    "message" => "The payment has been successfully processed, the money has been added to the recipient's account"
+                ]);
+
+            } else {
+                //if its between 71 and 100, it is failed.
+
+                //The origin's balance is returned
+                $originUser = $payment->load('origin');
+                $originUser->origin->currency += $payment->amount;
+                $originUser->origin->save();
+
+                $payment->status = 'fallido';
+                $payment->save();
+
+                return response()->json([
+                    "success" => false,
+                    "message" => "Payment processing has failed, the money has been returned to the origin account"
+                ]);
+            }
+            
+
+        } catch (\Exception $e) {
+            return response()->json([
+                "success"=>false,
+                "message" => "Error processing payment",
+            ]);
+        }
     }
 }
