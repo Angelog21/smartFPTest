@@ -41,7 +41,7 @@ class AuthController extends Controller
                 ]);
             }
 
-        
+
             //if the token is not created
             $token = Auth::attempt($credentials);
             if (!$token) {
@@ -65,17 +65,17 @@ class AuthController extends Controller
                     "message"=>"The credentials are incorrect has a total of {$attemps} attempts."
                 ]);
             }
-        
+
 
             $user->max_attempts = 0;
             $user->save();
-            
+
             $user = Auth::user();
             return response()->json([
                 "data"=>$user,
                 "token"=>$token
             ]);
-        } catch (JWTException $e) {
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Error server']);
         }
 
