@@ -18,15 +18,15 @@ class JwtMiddleware extends BaseMiddleware
 
             if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException){
 
-                return response()->json(['success' => false, "message" => 'Token invalid']);
+                return response()->json(['success' => false, "message" => 'Token invalid'],401);
 
             }else if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException){
 
-                return response()->json(['success' => false, "message" => 'Token expired']);
+                return response()->json(['success' => false, "message" => 'Token expired'],401);
 
             }else{
 
-                return response()->json(['success' => false, "message" => 'Authorization Token not found']);
+                return response()->json(['success' => false, "message" => 'Authorization Token not found'],401);
             }
         }
         return $next($request);

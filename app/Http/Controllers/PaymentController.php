@@ -32,13 +32,13 @@ class PaymentController extends Controller
             return response()->json([
                 "success" => true,
                 "data" => $payments
-            ]);
+            ],200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message'=>"Error in get payments.",
-            ]);
+            ],500);
         }
     }
 
@@ -59,14 +59,14 @@ class PaymentController extends Controller
                 return response()->json([
                     "success"=>false,
                     "message" => $e->getMessage(),
-                ]);
+                ],400);
             }
-    
+
             $data = $request->all();
-    
+
             //Open transaction for creating payment and update user currency
             DB::beginTransaction();
-            
+
             //verify if the origin user has less money than he wants to transfer
             $originUser = auth()->user();
 
@@ -74,17 +74,17 @@ class PaymentController extends Controller
                 return response()->json([
                     "success"=>false,
                     "message" => "Insufficient money for transfer.",
-                ]);
+                ],400);
             }
-    
+
             //search User Account to transfer payment
             $receivedUser = User::where('cpf',$data["cpf"])->first();
-    
+
             if(!$receivedUser) {
                 return response()->json([
                     "success"=>false,
                     "message" => "User not found.",
-                ]);
+                ],404);
             }
 
             // The percentage is charged depending on the payment method
@@ -100,9 +100,14 @@ class PaymentController extends Controller
                 $finalAmount -= ($data["amount"] * 2) / 100;
 
             }elseif ($data["payment_method"] == "transferencia_bancaria") {
-                
+
                 $finalAmount -= ($data["amount"] * 4) / 100;
 
+            }else {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Invalid payment method."
+                ],400);
             }
 
             $payment = Payment::create([
@@ -119,21 +124,21 @@ class PaymentController extends Controller
 
             $originUser->currency -= $payment->amount;
             $originUser->save();
-    
+
             DB::commit();
 
             return response()->json([
                 "success"=>true,
                 "data"=>$payment,
                 "message"=>'Payment has been created successfully.'
-            ]);
+            ],200);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message'=>"Error in payment create.",
-            ]);
+            ],500);
         }
     }
 
@@ -144,10 +149,10 @@ class PaymentController extends Controller
     {
         try {
             if (!isset($id)) {
-                return repsonse()->json([
+                return response()->json([
                     "success" => false,
                     "message" => "Missing id of payment"
-                ]);
+                ],400);
             }
 
             //get detail payment
@@ -163,12 +168,12 @@ class PaymentController extends Controller
                     'created_at'
                 )->first();
 
-            
+
             if (!$payment) {
-                return respone()->json([
+                return response()->json([
                     "success" => false,
                     "message" => "payment not found"
-                ]);
+                ],404);
             }
 
             //If the payment is found, the relationships are loaded to optimize the query
@@ -193,13 +198,13 @@ class PaymentController extends Controller
             return response()->json([
                 "success" => true,
                 "data" => $payment
-            ]);
+            ],200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message'=>"Error in get detail payment.",
-            ]);
+            ],500);
         }
     }
 
@@ -213,7 +218,7 @@ class PaymentController extends Controller
                 $request->validate([
                     'paymentId' => 'required|string'
                 ]);
-                
+
             } catch (\Exception $e) {
                 return response()->json([
                     "success"=>false,
@@ -222,13 +227,13 @@ class PaymentController extends Controller
             }
 
             $payment = Payment::whereId($request->paymentId)->first();
-            
+
             //validate if payment exists
             if (!$payment) {
-                return respone()->json([
+                return response()->json([
                     "success" => false,
                     "message" => "payment not found"
-                ]);
+                ],404);
             }
 
             //Validate if payment isn't pending
@@ -237,7 +242,7 @@ class PaymentController extends Controller
                 return response()->json([
                     "success"=>false,
                     "message" => "Payment status is {$payment->status}",
-                ]);
+                ],400);
 
             }
 
@@ -257,7 +262,7 @@ class PaymentController extends Controller
                 return response()->json([
                     "success" => true,
                     "message" => "The payment has been successfully processed, the money has been added to the recipient's account"
-                ]);
+                ],200);
 
             } else {
                 //if its between 71 and 100, it is failed.
@@ -273,15 +278,15 @@ class PaymentController extends Controller
                 return response()->json([
                     "success" => false,
                     "message" => "Payment processing has failed, the money has been returned to the origin account"
-                ]);
+                ],200);
             }
-            
+
 
         } catch (\Exception $e) {
             return response()->json([
                 "success"=>false,
                 "message" => "Error processing payment",
-            ]);
+            ],500);
         }
     }
 }
